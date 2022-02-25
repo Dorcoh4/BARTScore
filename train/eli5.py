@@ -114,7 +114,9 @@ else: # except IOError:
               question = example["title"]+ example["selftext"] #FORDOR add special sep token?
               for i in range (len (example["answers"]["a_id"])):
                   answer = example["answers"]["text"][i]
-                  the_file.write(f'{{"text": "{question.replace(\'"\',\'\\"\')}", "summary": "{answer.replace(\'"\',\'\\"\')}"}}\n')
+                  question = question.replace('"','\\"')
+                  answer = answer.replace('"','\\"')
+                  the_file.write(f'{{"text": "{question}", "summary": "{answer}}\n')
 #                   inputs.append(question + sep_token + answer)
   #                 print (f'FORDOR float - {float(example["answers"]["score"][i])} {example["answers"]["score"][i]}')
 #                   labels.append(float(example["answers"]["score"][i]))
