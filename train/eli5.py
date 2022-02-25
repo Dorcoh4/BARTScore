@@ -11,6 +11,7 @@ import numpy as np
 import pickle
 from sklearn.preprocessing import StandardScaler
 import random
+import json
 
 sep_token = "[SEP]" # FORDOR maybe many special tokens
 pretrained_model_name = "roberta-base" # 'bert-base-cased'
@@ -114,9 +115,9 @@ else: # except IOError:
               question = example["title"]+ example["selftext"] #FORDOR add special sep token?
               for i in range (len (example["answers"]["a_id"])):
                   answer = example["answers"]["text"][i]
-                  question = question.replace('"','\\"')
-                  answer = answer.replace('"','\\"')
-                  the_file.write(f'{{"text": "{question}", "summary": "{answer}"}}\n')
+#                   question = question.replace('"','\\"')
+#                   answer = answer.replace('"','\\"')
+                  the_file.write(f'{{"text": "{json.dumps(question)}", "summary": "{json.dumps(answer)}"}}\n')
 #                   inputs.append(question + sep_token + answer)
   #                 print (f'FORDOR float - {float(example["answers"]["score"][i])} {example["answers"]["score"][i]}')
 #                   labels.append(float(example["answers"]["score"][i]))
