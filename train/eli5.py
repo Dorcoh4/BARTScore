@@ -104,33 +104,36 @@ else: # except IOError:
     tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name)
     
     def preprocess_data(split_name):
-        inputs = []
-        labels = []
-        cnt = 0
-        for example in raw_datasets[split_name]:
+        with open(f'{split_name}.json', 'a') as the_file:
+    
+          inputs = []
+          labels = []
+          cnt = 0
+          for example in raw_datasets[split_name]:
 
-            question = "question : " + example["title"]+ example["selftext"] #FORDOR add special sep token?
-            for i in range (1, len (example["answers"]["a_id"])):
-                answer = "reference : " + example["answers"]["text"][0] + sep_token + "answer : "  + example["answers"]["text"][i]
-                inputs.append(question + sep_token + answer)
-#                 print (f'FORDOR float - {float(example["answers"]["score"][i])} {example["answers"]["score"][i]}')
-                labels.append(float(example["answers"]["score"][i]))
-                cnt = cnt+1
-                if cnt > 150000:
-                  break
+              question = example["title"]+ example["selftext"] #FORDOR add special sep token?
+              for i in range (len (example["answers"]["a_id"])):
+                  answer = example["answers"]["text"][i]
+                  the_file.write(f'\{"text": "{question}", "summary": "{answer}"\}\n')
+#                   inputs.append(question + sep_token + answer)
+  #                 print (f'FORDOR float - {float(example["answers"]["score"][i])} {example["answers"]["score"][i]}')
+#                   labels.append(float(example["answers"]["score"][i]))
+                  cnt = cnt+1
+#                   if cnt > 150000:
+#                     break
 
         # tokenized_datasets = raw_datasets.map(tokenize_function, batched=True)
         
         #shuffle data
-        c = list(zip(inputs, labels))
-        random.seed(42)
-        random.shuffle(c)
-        inputs, labels = zip(*c)
-        inputs = list(inputs)
-        labels = list(labels)
+#         c = list(zip(inputs, labels))
+#         random.seed(42)
+#         random.shuffle(c)
+#         inputs, labels = zip(*c)
+#         inputs = list(inputs)
+#         labels = list(labels)
 
         
-        encodings = tokenizer(inputs, padding="max_length", truncation=True)
+#         encodings = tokenizer(inputs, padding="max_length", truncation=True)
 #         encodings2 = tokenizer(inputs, padding="max_length", truncation=False)
 #         for i in range(len(encodings)):
 #             if len(encodings[i]) != len( encodings2[i]):
@@ -138,50 +141,50 @@ else: # except IOError:
 #         
         
         
-        tensor_labels = torch.as_tensor(labels).reshape(-1,1)
-        scaler = StandardScaler()
-        scaler.fit(tensor_labels)
-        scaled_labels = scaler.transform(tensor_labels).astype(np.float32)
+#         tensor_labels = torch.as_tensor(labels).reshape(-1,1)
+#         scaler = StandardScaler()
+#         scaler.fit(tensor_labels)
+#         scaled_labels = scaler.transform(tensor_labels).astype(np.float32)
 #         changeArr(labels)
 
       
-        my_dataset[split_name] = ELI5MetricDataset(encodings, scaled_labels)
-        print (f"FORDOR lens {len(encodings)}=={len(labels)}")
+#         my_dataset[split_name] = ELI5MetricDataset(encodings, scaled_labels)
+#         print (f"FORDOR lens {len(encodings)}=={len(labels)}")
     #     assert len(encodings) == len(labels)
     
     preprocess_data("train_eli5")
     preprocess_data("validation_eli5")
 #     pickle.dump( my_dataset, open( "my_dataset.pickle", "wb" ) )
 
-metric = load_metric("spearmanr")
-def compute_metrics(eval_pred):
-    logits, labels = eval_pred
-    print(f'logits- {max(logits)}, {min(logits)}')
-    print(f'labels- {max(labels)}, {min(labels)}')
-    return metric.compute(predictions=logits, references=labels)
+# metric = load_metric("spearmanr")
+# def compute_metrics(eval_pred):
+#     logits, labels = eval_pred
+#     print(f'logits- {max(logits)}, {min(logits)}')
+#     print(f'labels- {max(labels)}, {min(labels)}')
+#     return metric.compute(predictions=logits, references=labels)
 
-model = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name, num_labels=1)
-# freezing bert parameters leaving only regression layer
-# for param in model.bert.parameters():
-#     param.requires_grad = False
-# model = my_Bert(model)
-# print (f"FORDOR model = {str(model)}")
-# print (f'FORDOR debug {raw_datasets["train_eli5"][0]["answers"]} =:= {model(input_ids=my_dataset["train_eli5"][0]["input_ids"].unsqueeze(0), attention_mask=my_dataset["train_eli5"][0]["attention_mask"].unsqueeze(0), token_type_ids=my_dataset["train_eli5"][0]["token_type_ids"].unsqueeze(0))}')
-training_args = TrainingArguments("test_trainer", evaluation_strategy="steps", eval_steps=10000, save_steps=10000, per_device_train_batch_size=8, per_device_eval_batch_size=8)
-trainer = Trainer(model=model, args=training_args, train_dataset=my_dataset["train_eli5"], eval_dataset=my_dataset["validation_eli5"], compute_metrics=compute_metrics,
-                 callbacks = [
-                DefaultFlowCallback(),
-                 PrinterCallback()
-    ],
-                 )
-#, max_steps=3000 
-trainer.train()
+# model = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name, num_labels=1)
+# # freezing bert parameters leaving only regression layer
+# # for param in model.bert.parameters():
+# #     param.requires_grad = False
+# # model = my_Bert(model)
+# # print (f"FORDOR model = {str(model)}")
+# # print (f'FORDOR debug {raw_datasets["train_eli5"][0]["answers"]} =:= {model(input_ids=my_dataset["train_eli5"][0]["input_ids"].unsqueeze(0), attention_mask=my_dataset["train_eli5"][0]["attention_mask"].unsqueeze(0), token_type_ids=my_dataset["train_eli5"][0]["token_type_ids"].unsqueeze(0))}')
+# training_args = TrainingArguments("test_trainer", evaluation_strategy="steps", eval_steps=10000, save_steps=10000, per_device_train_batch_size=8, per_device_eval_batch_size=8)
+# trainer = Trainer(model=model, args=training_args, train_dataset=my_dataset["train_eli5"], eval_dataset=my_dataset["validation_eli5"], compute_metrics=compute_metrics,
+#                  callbacks = [
+#                 DefaultFlowCallback(),
+#                  PrinterCallback()
+#     ],
+#                  )
+# #, max_steps=3000 
+# trainer.train()
 
-# model.eval()
-# print (f'FORDOR2 debug {raw_datasets["train_eli5"][0]["answers"]} =:= {model(input_ids=my_dataset["train_eli5"][0]["input_ids"].unsqueeze(0).cuda(), attention_mask=my_dataset["train_eli5"][0]["attention_mask"].unsqueeze(0).cuda(), token_type_ids=my_dataset["train_eli5"][0]["token_type_ids"].unsqueeze(0).cuda())}')
-# print (f'FORDOR3 debug {raw_datasets["train_eli5"][0]["answers"]} =:= {model(input_ids=my_dataset["train_eli5"][1]["input_ids"].unsqueeze(0).cuda(), attention_mask=my_dataset["train_eli5"][1]["attention_mask"].unsqueeze(0).cuda(), token_type_ids=my_dataset["train_eli5"][1]["token_type_ids"].unsqueeze(0).cuda())}')
-# print (f'FORDOR4 debug {raw_datasets["train_eli5"][1]["answers"]} =:= {model(input_ids=my_dataset["train_eli5"][4]["input_ids"].unsqueeze(0).cuda(), attention_mask=my_dataset["train_eli5"][4]["attention_mask"].unsqueeze(0).cuda(), token_type_ids=my_dataset["train_eli5"][4]["token_type_ids"].unsqueeze(0).cuda())}')
+# # model.eval()
+# # print (f'FORDOR2 debug {raw_datasets["train_eli5"][0]["answers"]} =:= {model(input_ids=my_dataset["train_eli5"][0]["input_ids"].unsqueeze(0).cuda(), attention_mask=my_dataset["train_eli5"][0]["attention_mask"].unsqueeze(0).cuda(), token_type_ids=my_dataset["train_eli5"][0]["token_type_ids"].unsqueeze(0).cuda())}')
+# # print (f'FORDOR3 debug {raw_datasets["train_eli5"][0]["answers"]} =:= {model(input_ids=my_dataset["train_eli5"][1]["input_ids"].unsqueeze(0).cuda(), attention_mask=my_dataset["train_eli5"][1]["attention_mask"].unsqueeze(0).cuda(), token_type_ids=my_dataset["train_eli5"][1]["token_type_ids"].unsqueeze(0).cuda())}')
+# # print (f'FORDOR4 debug {raw_datasets["train_eli5"][1]["answers"]} =:= {model(input_ids=my_dataset["train_eli5"][4]["input_ids"].unsqueeze(0).cuda(), attention_mask=my_dataset["train_eli5"][4]["attention_mask"].unsqueeze(0).cuda(), token_type_ids=my_dataset["train_eli5"][4]["token_type_ids"].unsqueeze(0).cuda())}')
 
 
-print ("evaluation starting")
-print (trainer.evaluate())
+# print ("evaluation starting")
+# print (trainer.evaluate())
