@@ -117,7 +117,7 @@ else: # except IOError:
                   answer = example["answers"]["text"][i]
 #                   question = question.replace('"','\\"')
 #                   answer = answer.replace('"','\\"')
-                  the_file.write(f'{{"text": "{json.dumps(question)}", "summary": "{json.dumps(answer)}"}}\n')
+                  the_file.write(f'{{"text": {json.dumps(question)}, "summary": {json.dumps(answer)} }}\n')
 #                   inputs.append(question + sep_token + answer)
   #                 print (f'FORDOR float - {float(example["answers"]["score"][i])} {example["answers"]["score"][i]}')
 #                   labels.append(float(example["answers"]["score"][i]))
